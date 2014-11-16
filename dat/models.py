@@ -64,7 +64,7 @@ def parseCompoundIndex(index):
     return idx
 
 
-class MetaModel(object):
+class Meta(object):
 
     def __init__(self, field_list):
         self.fields = {}
@@ -122,11 +122,11 @@ class ModelBaseMeta(type):
                 indexField(_collection, key, val)
                 del classDict[key]
 
-        newmeta = MetaModel(field_list)
+        meta = Meta(field_list)
 
         # make the class
         new_class = type.__new__(cls, classname, bases, classDict)
-        new_class.meta = newmeta
+        new_class.meta = meta
 
         # register the model in the ModelRegistry
         register(app_label, classname, new_class)
