@@ -1,0 +1,7 @@
+.DS_Store
+*.pyc
+*~
+ignore
+todo.md
+*.egg-info
+venv

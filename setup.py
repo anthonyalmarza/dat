@@ -1,0 +1,44 @@
+from setuptools import setup, find_packages
+from dat import __version__
+
+import os
+
+
+def file_name(rel_path):
+    dir_path = os.path.dirname(__file__)
+    return os.path.join(dir_path, rel_path)
+
+
+def readlines(rel_path):
+    with open(file_name(rel_path)) as f:
+        ret = f.readlines()
+    return ret
+
+
+setup(
+    author="Anthony Almarza",
+    author_email="anthony.almarza@gmail.com",
+    name="dat",
+    packages=find_packages(exclude=["tests", ]),
+    version=__version__,
+    url="https://github.com/anthonyalmarza/dat",
+    download_url=(
+        "https://github.com/anthonyalmarza/dat/tarball/"
+        "v" + __version__
+    ),
+    description="A thin orm for pymongo",
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Framework :: Django',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: POSIX',
+        'Programming Language :: Python',
+        'Topic :: Internet :: WWW/HTTP',
+    ],
+    keywords=["mongo", "pymongo", "orm-ish", "data", "nosql"],
+    install_requires=readlines('requirements'),
+    extras_require={
+        'dev': ['ipdb', 'mongomock', 'mock'],
+    }
+)
