@@ -71,6 +71,7 @@ class TestModels(TestCase):
         else:
             namespace = 'person'
         self.assertTrue(namespace in collection_names)
+        self.assertTrue('product' in collection_names)
         self.assertIsInstance(Person.collection, collection.Collection)
 
     def test_db(self):
