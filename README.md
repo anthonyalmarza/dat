@@ -9,13 +9,13 @@ dat is inspired by Django's ORM and as such defining the model schema is quite
 similar. However,
 
     from dat.models import Model
+    from dat.fields import List, Int, Float, Char, TimeStamp
 
     class Person(Model):
 
         namespace = 'my_custom_collection_name'
 
         created = TimeStamp(default=datetime.utcnow)
-
         age = Int()
         name = Char(index=TEXT)
         parents = List()

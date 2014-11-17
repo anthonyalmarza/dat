@@ -5,3 +5,5 @@ ignore
 todo.md
 *.egg-info
 venv
+build
+dist
