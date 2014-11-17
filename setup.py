@@ -9,12 +9,6 @@ def file_name(rel_path):
     return os.path.join(dir_path, rel_path)
 
 
-def readlines(rel_path):
-    with open(file_name(rel_path)) as f:
-        ret = f.readlines()
-    return ret
-
-
 setup(
     author="Anthony Almarza",
     author_email="anthony.almarza@gmail.com",
@@ -39,7 +33,7 @@ setup(
         'Topic :: Internet :: WWW/HTTP',
     ],
     keywords=["mongo", "pymongo", "orm-ish", "data", "nosql"],
-    install_requires=readlines('requirements'),
+    install_requires=['pymongo', ],
     extras_require={
         'dev': ['ipdb', 'mongomock', 'mock'],
     }

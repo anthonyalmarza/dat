@@ -1,6 +1,8 @@
 # Dat
 ### A thin orm-ish wrapper for pymongo
 
+Check out the docs at [readthedocs.org](http://dat.readthedocs.org/en/latest/).
+
 # Examples
 
 ### Schema and saving instances to the database

@@ -1,6 +1,5 @@
 site_name: Dat Docs
 pages:
-- [index.md, Home]
 - [api.md, API Docs]
 - [cookbook.md, Cookbook]
 - [about.md, About]
