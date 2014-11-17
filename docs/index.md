@@ -9,7 +9,7 @@ Look how easy it is to use:
 
     class Person(Model):
 
-        namespace = 'my_custom_collection_name'
+        collection_name = 'my_custom_collection_name'
 
         created = TimeStamp(default=datetime.utcnow)
         age = Int()

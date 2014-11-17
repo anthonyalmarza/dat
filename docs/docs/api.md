@@ -129,7 +129,7 @@ possible to check for the non-existence of these fields via
 
 ## <a name="models"></a>Models
 
-##### Namespace - *Class Attribute*
+##### Collection Name - *Class Attribute*
 
 This is a option string that can be used to give the model's collection a
 custom name. By default the model's class name (all lower case) is used for
@@ -159,7 +159,7 @@ from dat.fields import Int, Float, Char, List, TimeStamp
 
 class Person(Model):
 
-    namespace = 'my_custom_collection_name'
+    collection_name = 'my_custom_collection_name'
 
     created = TimeStamp(default=datetime.utcnow)
     age = Int()

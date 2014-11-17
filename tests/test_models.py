@@ -14,7 +14,7 @@ COUNT = 0
 
 class Person(Model):
 
-    namespace = 'test_collection'
+    collection_name = 'test_collection'
 
     created = TimeStamp(default=datetime.utcnow)
 
@@ -66,11 +66,11 @@ class TestModels(TestCase):
 
     def test_collection(self):
         collection_names = Person._db.collection_names()
-        if hasattr(Person, 'namespace'):
-            namespace = Person.namespace
+        if hasattr(Person, 'collection_name'):
+            collection_name = Person.collection_name
         else:
-            namespace = 'person'
-        self.assertTrue(namespace in collection_names)
+            collection_name = 'person'
+        self.assertTrue(collection_name in collection_names)
         self.assertTrue('product' in collection_names)
         self.assertIsInstance(Person.collection, collection.Collection)
 

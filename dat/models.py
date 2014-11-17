@@ -88,8 +88,8 @@ class ModelBaseMeta(type):
             return model
 
         # find fields from all base classes of this model
-        namespace = classDict['namespace'] if 'namespace' in classDict else classname.lower()
-        _collection = mongo_client[DATABASE_NAME][namespace]
+        collection_name = classDict['collection_name'] if 'collection_name' in classDict else classname.lower()
+        _collection = mongo_client[DATABASE_NAME][collection_name]
         field_list = []
         for base in bases:
             # create the unique_together index

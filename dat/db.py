@@ -220,8 +220,8 @@ class DatabaseInterface(object):
 
     @classproperty
     def collection(cls):
-        namespace = cls.namespace if hasattr(cls, 'namespace') else cls.__name__.lower()
-        return cls._db[namespace]
+        collection_name = cls.collection_name if hasattr(cls, 'collection_name') else cls.__name__.lower()
+        return cls._db[collection_name]
 
     @classmethod
     def parseProjections(cls, projection, include=None, exclude=None):
