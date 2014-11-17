@@ -193,7 +193,7 @@ bob = Person.get({'name': 'Bob'}, exclude=['_id', ])  # _id exclusion must be ex
 ##### Filter - *Class Method*
 `Model.filter(conditions=None, projection=None, include=None, exclude=None, limit=None)`
 
-Returns a [QuerySet](API_Documentation/QuerySets.md).
+Returns a [QuerySet](QuerySets.md).
 
 The filter method allows the user to fetch multiple documents at a time via the
 lazy definition of conditions and projections. By returning a QuerySet instance

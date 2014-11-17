@@ -1,6 +1,9 @@
 site_name: Dat Docs
 pages:
-# - [api.md, API Docs]
+- [API_Documentation/overview.md, Overview]
+- [API_Documentation/fields.md, Fields]
+- [API_Documentation/models.md, Models]
+- [API_Documentation/QuerySets.md, QuerySets]
 - [cookbook.md, Cookbook]
 - [about.md, About]
 - [coming_soon.md, Coming Soon]
