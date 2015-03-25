@@ -33,7 +33,6 @@ Look how easy it is to use:
 
 Install dat by running:
 
-    pip install -e git
     pip install dat
 
 ## Contribute

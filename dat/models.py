@@ -60,7 +60,10 @@ def indexField(collection, name, field):
 def parseCompoundIndex(index):
     idx = []
     for elm in index:
-        idx += elm if isinstance(elm, (list, tuple)) else [(elm, pymongo.ASCENDING), ]
+        if isinstance(elm, (list, tuple)):
+            idx += elm
+        else:
+            idx += [(elm, pymongo.ASCENDING), ]
     return idx
 
 
@@ -137,7 +140,6 @@ class ModelBaseMeta(type):
 class Model(DatabaseInterface):
 
     __metaclass__ = ModelBaseMeta
-    unique_on = None
 
     _id = Id()
 
@@ -152,7 +154,7 @@ class Model(DatabaseInterface):
             field.value = value
 
     def __repr__(self):
-        return u'<%s %s>' % (self.__class__.__name__, self._id)
+        return u'<%s: %s>' % (self.__class__.__name__, self._id)
 
     def filterFields(self, field_type):
         """

@@ -1,7 +1,7 @@
 from pymongo import MongoClient, MongoReplicaSetClient, ASCENDING, DESCENDING
-# from pymongo.errors import OperationFailure
+from pymongo.errors import OperationFailure
 from .utils import classproperty
-from .exceptions import MultipleObjectsExist, DoesNotExist
+from .exceptions import MultipleObjectsExist, DoesNotExist, QueryError
 
 import os
 import sys
@@ -50,6 +50,23 @@ BSON_TYPES = {
     'MinKey': 255,
     'MaxKey': 127
 }
+
+
+def getUniqueInnerKeys(document):
+    unique_names = set()
+    for key, dct in document.items():
+        unique_names.add(*dct.keys())
+    return unique_names
+
+
+def parseUpdateKwargs(kwargs):
+    for key, value in kwargs.items():
+        if '__' in key:
+            raise ValueError(
+                'dat.db.QuerySet.update does not support alternate operators '
+                'or modifiers via keyword arguments. Unsupported: %s' % key
+            ), None, sys.exc_info()[2]
+    return {'$set': kwargs}
 
 
 class QuerySet(object):
@@ -138,13 +155,19 @@ class QuerySet(object):
 
     def __iter__(self):
         cursor = self.cursor.clone()
-        for document in cursor:
-            yield self.model_class(_from_db=True, **document)
+        try:
+            for document in cursor:
+                yield self.model_class(_from_db=True, **document)
+        except OperationFailure, e:
+            raise QueryError(e.details.get('$err')), None, sys.exc_info()[2]
 
     def __getitem__(self, index):
-        if not hasattr(self, '_cache'):
-            self._cache = tuple(self)
-        return self._cache[index]
+        try:
+            if not hasattr(self, '_cache'):
+                self._cache = tuple(self)
+            return self._cache[index]
+        except OperationFailure, e:
+            raise QueryError(e.details.get('errmsg')), None, sys.exc_info()[2]
 
     def __len__(self):
         return self.count(with_limit_and_skip=True)
@@ -155,7 +178,11 @@ class QuerySet(object):
     def exists(self):
         return bool(self.count(with_limit_and_skip=True))
 
-    def update(self, document, multi=True, upsert=False, **kwargs):
+    def update(
+        self, document=None, multi=True, upsert=False,
+        getUniqueInnerKeys=getUniqueInnerKeys,
+        parseUpdateKwargs=parseUpdateKwargs, **kwargs
+    ):
         """
         SINGLE VALUE FIELDS
         $currentDate    - Sets the value of a field to current date, either
@@ -178,7 +205,7 @@ class QuerySet(object):
         LIST/SET FIELDS
         $               - Acts as a placeholder to update the first element
                           that matches the query condition in an update.
-        $addToSeT       - Adds elements to an array only if they do not already
+        $addToSet       - Adds elements to an array only if they do not already
                           exist in the set.
         $pop            - Removes the first or last item of an array.
         $pullAll        - Removes all matching values from an array.
@@ -197,6 +224,35 @@ class QuerySet(object):
         $sort           - Modifies the $push operator to reorder documents
                           stored in an array.
         """
+        document = document or {}
+        if document and kwargs:
+            raise ValueError(
+                'Unsupported method input: using both a dictionary and kwargs '
+                'is not supported. Please use %s or %s.' % (document, kwargs)
+            ), None, sys.exc_info()[2]
+        elif kwargs:
+            document.update(parseUpdateKwargs(kwargs))
+        elif not document:
+            raise ValueError(
+                'Either supply a mongo-like document with operators and '
+                'modifiers, or a series of keyword arguements to be set.'
+            ), None, sys.exc_info()[2]
+
+        # maintain the integrity of the data schema by checking if the user has
+        # tried to insert a new field to the found documents.
+        actual_fieldnames = set(self.model_class.meta.fields.keys())
+        doc_fieldnames = getUniqueInnerKeys(document)
+        wrong_fieldnames = tuple(doc_fieldnames - actual_fieldnames)
+        if wrong_fieldnames:
+            raise ValueError(
+                'Could not find the fields %s in the list of %r\'s fields: '
+                '%s' % (
+                    wrong_fieldnames,
+                    self.model_class,
+                    tuple(actual_fieldnames)
+                )
+            )
+
         acknowledgement = self.model_class.collection.update(
             self.conditions, document, multi=multi, upsert=upsert, **kwargs
         )
@@ -205,9 +261,15 @@ class QuerySet(object):
 
 
 class DatabaseInterface(object):
+    """
+    A mixin interface for models to connect with the database. It contains both
+    class methods and instance methods to allow the user to update one or many
+    documents in the .
+    """
 
     MultipleObjectsExist = MultipleObjectsExist
     DoesNotExist = DoesNotExist
+    QueryError = QueryError
     ASCENDING = ASCENDING
     DESCENDING = DESCENDING
 
@@ -220,9 +282,14 @@ class DatabaseInterface(object):
 
     @classproperty
     def collection(cls):
-        collection_name = cls.collection_name if hasattr(cls, 'collection_name') else cls.__name__.lower()
+        if hasattr(cls, 'collection_name'):
+            collection_name = cls.collection_name
+        else:
+            collection_name = cls.__name__.lower()
         return cls._db[collection_name]
 
+    ###########################################################################
+    # helper methods - cleaning developer input
     @classmethod
     def parseProjections(cls, projection, include=None, exclude=None):
         include = include or []
@@ -233,6 +300,31 @@ class DatabaseInterface(object):
             projection[field] = 0
         return projection
 
+    @classmethod
+    def parseConditions(cls, **kwargs):
+        conditions = {}
+        for key, value in kwargs.items():
+            if not key:
+                raise QueryError(
+                    'Field name must be specified on a query, it may not be an'
+                    'empty string or begin with "__".'
+                ), None, sys.exc_info()[2]
+            parts = key.split('__')
+            num_parts = len(parts)
+            if num_parts == 1:
+                conditions[key] = value
+            elif num_parts == 2:
+                field, modifier = parts
+                conditions[field] = {'$%s' % modifier: value}
+            elif num_parts > 2:
+                raise QueryError(
+                    'Two occurrences of "__" is not supported in query '
+                    'statements.'
+                ), None, sys.exc_info()[2]
+        return conditions
+
+    ###########################################################################
+    # Class methods to create and retrieve data
     @classmethod
     def bulk_create(cls, model_list):
         bulkop = cls.collection.initialize_unordered_bulk_op()
@@ -254,16 +346,14 @@ class DatabaseInterface(object):
         model._from_db = True
         return model
 
-    def save(self, **kwargs):
-        "saves the model document and sets _from_db to True"
-        document = self.serialize()
-        _id = self.collection.save(document, **kwargs)
-        self._id = _id
-        self._from_db = True
-        return self
-
     @classmethod
-    def get(cls, conditions, projection=None, include=None, exclude=None):
+    def get(
+        cls, conditions=None, projection=None, include=None, exclude=None,
+        *args, **kwargs
+    ):
+        conditions = conditions or {}
+        if kwargs:
+            conditions.update(cls.parseConditions(**kwargs))
         projection = projection or {}
         projection = cls.parseProjections(
             projection, include=include, exclude=exclude
@@ -272,31 +362,22 @@ class DatabaseInterface(object):
         cursor = cls.collection.find(conditions, projection)
         if cursor.count() > 1:
             raise MultipleObjectsExist(
-                '%r.get returned multiple instance for the given conditions'
+                '%r.get returned multiple instances for the given conditions:'
+                '\n%s' % (cls, conditions)
             ), None, sys.exc_info()[2]
         try:
             return cls(_from_db=True, _conditions=conditions, **cursor[0])
         except IndexError, e:
-            raise DoesNotExist(str(e)), None, sys.exc_info()[2]
-
-    def update(self, **kwargs):
-        "a convenience function to facilitate the updating of model instances"
-        document = {'$set': {}}
-        for fieldname, value in kwargs.items():
-            setattr(self, fieldname, value)
-            document['$set'][fieldname] = value
-        if not self._from_db:
-            self.save()
-        elif self._conditions:
-            self.collection.update(self._conditions, document)
-        else:
-            self.filter({'_id': self._id}).update(document)
-        return self
+            logger.debug(str(e))
+            raise DoesNotExist(
+                '%r.get could not find an instance matching the '
+                'given conditions:\n%s' % (cls, conditions)
+            ), None, sys.exc_info()[2]
 
     @classmethod
     def filter(
         cls, conditions=None, projection=None, include=None, exclude=None,
-        limit=None
+        limit=None, *args, **kwargs
     ):
         """
         Returns a QuerySet which does not execute the cursor until a method
@@ -359,6 +440,8 @@ class DatabaseInterface(object):
         $near           - Returns geospatial objects in proximity to a point.
         """
         conditions = conditions or {}
+        if kwargs:
+            conditions.update(cls.parseConditions(**kwargs))
         projection = projection or {}
         projection = cls.parseProjections(
             projection, include=include, exclude=exclude
@@ -375,3 +458,13 @@ class DatabaseInterface(object):
         )
         projection = projection or None
         return cls.queryFactory(cls, {}, projection)
+
+    ###########################################################################
+    # Instance Methods
+    def save(self, **kwargs):
+        "saves the model document and sets _from_db to True"
+        document = self.serialize()
+        _id = self.collection.save(document, **kwargs)
+        self._id = _id
+        self._from_db = True
+        return self

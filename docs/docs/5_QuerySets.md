@@ -60,7 +60,7 @@ returned documents. For more information please refer the the pymongo
 ##### Skip - *Instance Method*
 `queryset.skip(<int>)`
 
-Returns a QuerySet instance. Modifies the cursor by skiping documents.
+Returns a QuerySet instance. Modifies the cursor by skipping documents.
 For more information please refer the the pymongo
 [docs](http://api.mongodb.org/python/current/api/pymongo/cursor.html#pymongo.cursor.Cursor.skip).
 

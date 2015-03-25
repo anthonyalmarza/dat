@@ -50,7 +50,7 @@ if no value for the field is given upon instantiation of the model class.
 ---
 
 ##### Unique - *Field Keyword Argument*
-Boolean. If `True` then the field is indexed to force uniqueness of values in
+Boolean (default: False). If `True` then the field is indexed to force uniqueness of values in
 that field across all documents within the model's collection. If no value is
 given for the `index` kwarg then `pymongo.ASCENDING` is used. For more
 information about unique indexing please refer to the pymongo

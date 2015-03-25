@@ -128,15 +128,37 @@ class TestModels(TestCase):
         )
         self.assertEqual(gotten_anthony.parents, ['the', ])
 
-        tony = gotten_anthony.update(name="Tony")
+        gotten_anthony.name = "Tony"
+        gotten_anthony.save()
         self.assertEqual(gotten_anthony.name, "Tony")
-        self.assertEqual(gotten_anthony, tony)
         self.assertEqual(Person.filter({'name': 'Tony'}).count(), 1)
 
-        young_anthony = Person(**self.data).update(age=22)
+        young_anthony = Person(**self.data)
+        young_anthony.age = 22
+        young_anthony.save()
         self.assertTrue(young_anthony._from_db)
         self.assertEqual(
             Person.filter({'name': 'Anthony', 'age': 22}).count(), 1
+        )
+
+        self.assertRaises(
+            Person.DoesNotExist, Person.get, {'name': 'Alice'}
+        )
+
+        Person.create(name='Tony')
+
+        self.assertRaises(
+            Person.QueryError, Person.filter(name__asfdf='asfd').__getitem__, 0
+        )
+
+        def iterate():
+            for i in Person.filter(name__asfdf='asfd'):
+                print i
+
+        self.assertRaises(Person.QueryError, iterate)
+
+        self.assertRaises(
+            Person.MultipleObjectsExist, Person.get, {'name': 'Tony'}
         )
 
     def test_filter(self):
@@ -176,10 +198,17 @@ class TestModels(TestCase):
         queryset.filter({'age': {'$gt': 40}})
         self.assertEqual(queryset.count(), 5)
 
+        # test that you can't add a field to the document that isn't in the
+        # model schema
+        self.assertRaises(ValueError, queryset.update, not_here=1000)
+
+        # test that setting values via a kwarg is possible
+        queryset.update(age=100)
+
         # test serialization of queryset, also tests projection on filter
         # via the exclude
         data = self.data
-        data['age'] = 60
+        data['age'] = 100
         for d in queryset.serialize():
             self.assertItemsEqual(d, data)
             self.assertDictContainsSubset(d, data)

@@ -5,7 +5,7 @@ Dat is a light-weight solution to building schema's for
 The overall design of this project is heavily inspired by Django's ORM but
 is trimmed down and tightly coupled to Mongo's API. This means that it is
 not currently possible to change the backend database technology to say
-PostgreSQL or redis. However if you're looking for a more performant
+PostgreSQL or redis. If you're looking for a more performant
 database engine [TokuMx](https://github.com/Tokutek/mongo) is a Mongo
 engine alternative that apparently works seamlessly with MongoDB drivers.
 What this means is that you can use a cloud service such as

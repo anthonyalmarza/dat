@@ -29,9 +29,7 @@ from dat.models import Model
 from dat.fields import Int, Float, Char, List, TimeStamp
 
 class Person(Model):
-
     collection_name = 'my_custom_collection_name'
-
     created = TimeStamp(default=datetime.utcnow)
     age = Int()
     name = Char(index=TEXT)
@@ -62,31 +60,6 @@ bob = Person.create(name='Bob', age=40, height=1.67)
 
 ---
 
-##### Update - *Instance Method*
-
-`model.update(**kwargs)`
-
-Returns the updated Model instance. This is a convenience method that allows
-the user to update the instance and save those changes to the collection.
-
-```python
-# imports ...
-
-class Person(Model):
-    ...
-
-bob = Person.create(name='Bob', age=40, height=1.67)
-
-# DO SOME OTHER STUFF
-
-bob.update(parents=['Mary', 'John'])
-
-print bob.parents
-    => ['Mary', 'John']
-```
-
----
-
 ##### Bulk Create - *Class Method*
 
 `Model.bulk_create(list_of_models)`
@@ -99,6 +72,7 @@ Returns the count of model instances saved to the collection.
 class Person(Model):
     ...
 
+# instantiate people
 person1 = Person(...)
 person2 = Person(...)
 person3 = Person(...)
@@ -115,7 +89,9 @@ print count
 ##### Unique Together - *Class Attribute*
 
 Defines fields that should be unique together on a document within the
-collection. e.g.
+collection. Note that `unique_together` must be an iterable of field names or
+of tuples containing the name of the field and the type of index on the field
+e.g.
 
 ```python
 import pymongo
