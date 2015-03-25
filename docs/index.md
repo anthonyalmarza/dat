@@ -1,4 +1,4 @@
-# Dat v0.0.0
+# Dat v1.0.0
 
 **dat**: Lightweight MongoDB ORM.
 

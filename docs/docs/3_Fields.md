@@ -12,7 +12,7 @@ At present there are 8 field types:
 - `TimeStamp` => type: *datetime.datetime*
 
 Each of the above field classes is used to define the model schema via
-instantiation to an attribute of the [Model](models.md) at class definition.
+instantiation to an attribute of the [Model](4_Models.md) at class definition.
 What this means is that you can subclass the `dat.models.Model` class and
 instantiate one of the above fields to an attribute on the model. e.g.
 
