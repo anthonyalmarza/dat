@@ -1,10 +1,11 @@
 site_name: Dat Docs
 pages:
-- [1_Tutorial.md, Tutorial]
-- [2_Examples.md, Examples]
-- [3_Fields.md, Fields]
-- [4_Models.md, Models]
-- [5_QuerySets.md, QuerySets]
-- [6_Coming_Soon.md, Coming Soon]
-- [7_About.md, About]
+- ['index.md', 'Introduction']
+- ['1_Tutorial.md', 'Tutorial']
+- ['2_Examples.md', 'Examples']
+- ['3_Fields.md', 'Fields']
+- ['4_Models.md', 'Models']
+- ['5_QuerySets.md', 'QuerySets']
+- ['6_Coming_Soon.md', 'Coming Soon']
+- ['7_About.md', 'About']
 theme: readthedocs
